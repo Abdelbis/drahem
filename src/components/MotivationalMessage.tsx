@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
 
@@ -16,15 +16,13 @@ const motivationalMessages = [
 ];
 
 const MotivationalMessage: React.FC = () => {
-  const [message, setMessage] = useState("");
-  const { getFinancialSummary } = useTransactions();
-  const summary = getFinancialSummary();
-
-  useEffect(() => {
+  const [message] = React.useState(() => {
     // Select a random message
     const randomIndex = Math.floor(Math.random() * motivationalMessages.length);
-    setMessage(motivationalMessages[randomIndex]);
-  }, []);
+    return motivationalMessages[randomIndex];
+  });
+  
+  const { summary } = useTransactions();
 
   // Show special message if user is doing well
   const getSpecialMessage = () => {
