@@ -12,15 +12,17 @@ import MotivationalMessage from "@/components/MotivationalMessage";
 import { Transaction } from "@/types";
 
 const Dashboard: React.FC = () => {
-  const { getFinancialSummary } = useTransactions();
   const [showForm, setShowForm] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   
-  const summary = getFinancialSummary();
-
   const handleEdit = (transaction: Transaction) => {
     setEditingTransaction(transaction);
     setShowForm(true);
+  };
+
+  const handleFormClose = () => {
+    setShowForm(false);
+    setEditingTransaction(null);
   };
 
   return (
@@ -29,7 +31,10 @@ const Dashboard: React.FC = () => {
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl md:text-3xl font-bold">Mon Budget</h1>
           <Button 
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setEditingTransaction(null);
+              setShowForm(true);
+            }}
             className="bg-blue-600 hover:bg-blue-700"
           >
             <PlusIcon className="mr-2 h-4 w-4" />
@@ -39,7 +44,7 @@ const Dashboard: React.FC = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <div className="lg:col-span-2">
-            <BalanceCard summary={summary} />
+            <BalanceCard />
           </div>
           <div className="lg:col-span-1">
             <MotivationalMessage />
@@ -58,7 +63,8 @@ const Dashboard: React.FC = () => {
       
       <TransactionForm 
         open={showForm} 
-        onOpenChange={setShowForm} 
+        onOpenChange={handleFormClose}
+        editingTransaction={editingTransaction}
       />
     </div>
   );

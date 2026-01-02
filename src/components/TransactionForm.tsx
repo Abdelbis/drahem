@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,27 +18,53 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, PlusIcon } from "lucide-react";
+import { CalendarIcon, PlusIcon, EditIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTransactions } from "@/hooks/useTransactions";
 import { allCategories, expenseCategories, incomeCategories } from "@/data/categories";
 import { toast } from "sonner";
+import { Transaction } from "@/types";
 
 interface TransactionFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  editingTransaction?: Transaction | null;
 }
 
-const TransactionForm: React.FC<TransactionFormProps> = ({ open, onOpenChange }) => {
-  const { addTransaction } = useTransactions();
-  const [type, setType] = useState<'expense' | 'income'>('expense');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('');
-  const [date, setDate] = useState<Date>(new Date());
-  const [note, setNote] = useState('');
+const TransactionForm: React.FC<TransactionFormProps> = ({ 
+  open, 
+  onOpenChange,
+  editingTransaction = null
+}) => {
+  const { addTransaction, updateTransaction } = useTransactions();
+  const [type, setType] = useState<'expense' | 'income'>(editingTransaction?.type || 'expense');
+  const [amount, setAmount] = useState(editingTransaction?.amount.toString() || '');
+  const [category, setCategory] = useState(editingTransaction?.category || '');
+  const [date, setDate] = useState<Date>(editingTransaction?.date ? new Date(editingTransaction.date) : new Date());
+  const [note, setNote] = useState(editingTransaction?.note || '');
   const [showCalendar, setShowCalendar] = useState(false);
 
   const categories = type === 'expense' ? expenseCategories : incomeCategories;
+
+  // Reset form when editing transaction changes or dialog opens
+  useEffect(() => {
+    if (open) {
+      if (editingTransaction) {
+        setType(editingTransaction.type);
+        setAmount(editingTransaction.amount.toString());
+        setCategory(editingTransaction.category);
+        setDate(new Date(editingTransaction.date));
+        setNote(editingTransaction.note || '');
+      } else {
+        // Reset to default values
+        setType('expense');
+        setAmount('');
+        setCategory('');
+        setDate(new Date());
+        setNote('');
+      }
+    }
+  }, [editingTransaction, open]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,21 +81,23 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ open, onOpenChange })
       return;
     }
     
-    addTransaction({
+    const transactionData = {
       type,
       amount: amountValue,
       category,
       date,
       note: note || undefined
-    });
+    };
     
-    // Reset form
-    setAmount('');
-    setCategory('');
-    setNote('');
-    setDate(new Date());
+    if (editingTransaction) {
+      updateTransaction(editingTransaction.id, transactionData);
+      toast.success("Transaction mise à jour avec succès");
+    } else {
+      addTransaction(transactionData);
+      toast.success(`Transaction ${type === 'expense' ? 'dépense' : 'revenu'} ajoutée avec succès`);
+    }
     
-    toast.success(`Transaction ${type === 'expense' ? 'dépense' : 'revenu'} ajoutée avec succès`);
+    // Close the form
     onOpenChange(false);
   };
 
@@ -86,7 +114,7 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ open, onOpenChange })
       <DialogContent className="sm:max-w-[425px] bg-gray-900 border-gray-800">
         <DialogHeader>
           <DialogTitle className="text-white">
-            Ajouter une transaction
+            {editingTransaction ? "Modifier la transaction" : "Ajouter une transaction"}
           </DialogTitle>
         </DialogHeader>
         
@@ -223,8 +251,17 @@ const TransactionForm: React.FC<TransactionFormProps> = ({ open, onOpenChange })
                 : "bg-green-500 hover:bg-green-600"
             )}
           >
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Ajouter
+            {editingTransaction ? (
+              <>
+                <EditIcon className="mr-2 h-4 w-4" />
+                Modifier
+              </>
+            ) : (
+              <>
+                <PlusIcon className="mr-2 h-4 w-4" />
+                Ajouter
+              </>
+            )}
           </Button>
         </form>
       </DialogContent>

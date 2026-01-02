@@ -3,29 +3,25 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useTransactions } from "@/hooks/useTransactions";
 
 const SummaryCards: React.FC = () => {
-  const { getDailySummary, getWeeklySummary, getMonthlySummary } = useTransactions();
-  
-  const daily = getDailySummary();
-  const weekly = getWeeklySummary();
-  const monthly = getMonthlySummary();
+  const { dailySummary, weeklySummary, monthlySummary } = useTransactions();
 
   const summaryData = [
     {
       title: "Aujourd'hui",
-      income: daily.income,
-      expenses: daily.expenses,
+      income: dailySummary.income,
+      expenses: dailySummary.expenses,
       period: "day"
     },
     {
       title: "Cette semaine",
-      income: weekly.income,
-      expenses: weekly.expenses,
+      income: weeklySummary.income,
+      expenses: weeklySummary.expenses,
       period: "week"
     },
     {
       title: "Ce mois",
-      income: monthly.income,
-      expenses: monthly.expenses,
+      income: monthlySummary.income,
+      expenses: monthlySummary.expenses,
       period: "month"
     }
   ];
